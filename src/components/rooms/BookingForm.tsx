@@ -9,7 +9,13 @@ import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
 interface BookingFormProps {
-  room: any
+  room: {
+    id: string
+    title: string
+    price: number
+    capacity: number
+    available: boolean
+  }
 }
 
 export default function BookingForm({ room }: BookingFormProps) {
@@ -20,13 +26,13 @@ export default function BookingForm({ room }: BookingFormProps) {
   const [guests, setGuests] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  const calculateNights = () => {
+  const calculateNights = (): number => {
     if (!checkIn || !checkOut) return 0
     const diff = checkOut.getTime() - checkIn.getTime()
     return Math.ceil(diff / (1000 * 60 * 60 * 24))
   }
 
-  const calculateTotal = () => {
+  const calculateTotal = (): number => {
     return calculateNights() * room.price
   }
 
@@ -55,7 +61,7 @@ export default function BookingForm({ room }: BookingFormProps) {
     setLoading(true)
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('bookings')
         .insert([
           {
@@ -68,15 +74,14 @@ export default function BookingForm({ room }: BookingFormProps) {
             status: 'pending',
           },
         ])
-        .select()
-        .single()
 
       if (error) throw error
 
-      toast.success('Booking successful!')
+      toast.success('Booking successful! 🎉')
       router.push('/bookings')
-    } catch (error: any) {
-      toast.error(error.message || 'Booking failed')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Booking failed'
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -96,7 +101,7 @@ export default function BookingForm({ room }: BookingFormProps) {
         </label>
         <DatePicker
           selected={checkIn}
-          onChange={(date) => setCheckIn(date)}
+          onChange={(date: Date | null) => setCheckIn(date)}
           minDate={new Date()}
           dateFormat="dd/MM/yyyy"
           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-ocean"
@@ -111,7 +116,7 @@ export default function BookingForm({ room }: BookingFormProps) {
         </label>
         <DatePicker
           selected={checkOut}
-          onChange={(date) => setCheckOut(date)}
+          onChange={(date: Date | null) => setCheckOut(date)}
           minDate={checkIn || new Date()}
           dateFormat="dd/MM/yyyy"
           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-ocean"
@@ -126,7 +131,7 @@ export default function BookingForm({ room }: BookingFormProps) {
         </label>
         <select
           value={guests}
-          onChange={(e) => setGuests(parseInt(e.target.value))}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setGuests(parseInt(e.target.value))}
           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-ocean"
         >
           {Array.from({ length: room.capacity }, (_, i) => i + 1).map((num) => (

@@ -1,17 +1,17 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useAuth } from '@/lib/auth-context'
+import { useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { user, profile, signOut } = useAuth()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, profile, signOut } = useAuth();
 
   const handleLogout = async () => {
-    await signOut()
-    window.location.href = '/'
-  }
+    await signOut();
+    window.location.href = "/";
+  };
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -31,37 +31,91 @@ export default function Navbar() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-ocean transition">
+            <Link
+              href="/"
+              className="text-gray-700 hover:text-ocean transition"
+            >
               Home
             </Link>
-            <Link href="/rooms" className="text-gray-700 hover:text-ocean transition">
+            <Link
+              href="/rooms"
+              className="text-gray-700 hover:text-ocean transition"
+            >
               Rooms
             </Link>
-            <Link href="/bookings" className="text-gray-700 hover:text-ocean transition">
+
+            <Link
+              href="/bookings"
+              className="text-gray-700 hover:text-ocean transition"
+            >
               My Bookings
             </Link>
-            <Link href="/about" className="text-gray-700 hover:text-ocean transition">
+            <Link
+              href="/about"
+              className="text-gray-700 hover:text-ocean transition"
+            >
               About
             </Link>
-            <Link href="/contact" className="text-gray-700 hover:text-ocean transition">
+            <Link
+              href="/contact"
+              className="text-gray-700 hover:text-ocean transition"
+            >
               Contact
             </Link>
+            {user && (
+              <>
+                <Link
+                  href="/profile"
+                  className="text-gray-700 hover:text-ocean transition"
+                >
+                  Profile
+                </Link>
+                <Link
+                  href="/admin"
+                  className="text-gray-700 hover:text-ocean transition"
+                >
+                  Admin
+                </Link>
+              </>
+            )}
 
             {/* Auth Buttons */}
             {user ? (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2 text-gray-700">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
-                  <span className="font-medium">{profile?.username || 'User'}</span>
+                  <span className="font-medium">
+                    {profile?.username || "User"}
+                  </span>
                 </div>
                 <button
                   onClick={handleLogout}
                   className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
                   </svg>
                   <span>Logout</span>
                 </button>
@@ -91,12 +145,32 @@ export default function Navbar() {
               className="text-gray-700 hover:text-ocean"
             >
               {mobileMenuOpen ? (
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               ) : (
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg
+                  className="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               )}
             </button>
@@ -142,7 +216,7 @@ export default function Navbar() {
             {user ? (
               <>
                 <div className="px-3 py-2 text-gray-700 font-medium">
-                  👤 {profile?.username || 'User'}
+                  👤 {profile?.username || "User"}
                 </div>
                 <button
                   onClick={handleLogout}
@@ -171,5 +245,5 @@ export default function Navbar() {
         </div>
       )}
     </nav>
-  )
+  );
 }
