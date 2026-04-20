@@ -4,6 +4,17 @@ import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import Link from "next/link";
 
+const particles = [
+  { width: "120px", height: "80px", top: "10%", left: "8%" },
+  { width: "90px", height: "110px", top: "20%", left: "75%" },
+  { width: "140px", height: "90px", top: "55%", left: "15%" },
+  { width: "100px", height: "100px", top: "65%", left: "70%" },
+  { width: "80px", height: "120px", top: "35%", left: "50%" },
+  { width: "150px", height: "70px", top: "75%", left: "40%" },
+  { width: "110px", height: "95px", top: "5%", left: "55%" },
+  { width: "95px", height: "130px", top: "45%", left: "85%" },
+];
+
 export default function Hero() {
   const heroRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -13,7 +24,6 @@ export default function Hero() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Title - letter by letter
       gsap.from(titleRef.current, {
         y: -80,
         opacity: 0,
@@ -21,7 +31,6 @@ export default function Hero() {
         ease: "power4.out",
       });
 
-      // Subtitle
       gsap.from(subtitleRef.current, {
         y: 60,
         opacity: 0,
@@ -30,30 +39,26 @@ export default function Hero() {
         ease: "power3.out",
       });
 
-      // Buttons
       gsap.from(buttonRef.current, {
-        scale: 0,
+        scale: 0.8,
         opacity: 0,
         duration: 0.8,
         delay: 0.8,
         ease: "back.out(1.7)",
       });
 
-      // Floating particles
       if (particlesRef.current) {
-        const particles = particlesRef.current.children;
-        gsap.to(particles, {
-          y: "random(-30, 30)",
-          x: "random(-20, 20)",
-          rotation: "random(-15, 15)",
-          duration: "random(3, 6)",
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-          stagger: {
-            amount: 2,
-            from: "random",
-          },
+        const particleElements = Array.from(particlesRef.current.children);
+
+        particleElements.forEach((particle, index) => {
+          gsap.to(particle, {
+            y: index % 2 === 0 ? -20 : 20,
+            x: index % 3 === 0 ? 15 : -15,
+            duration: 3 + index * 0.3,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+          });
         });
       }
     }, heroRef);
@@ -71,15 +76,15 @@ export default function Hero() {
         ref={particlesRef}
         className="absolute inset-0 overflow-hidden pointer-events-none"
       >
-        {Array.from({ length: 8 }).map((_, i) => (
+        {particles.map((particle, i) => (
           <div
             key={i}
             className="absolute rounded-full bg-white/10"
             style={{
-              width: `${Math.random() * 100 + 50}px`,
-              height: `${Math.random() * 100 + 50}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
+              width: particle.width,
+              height: particle.height,
+              top: particle.top,
+              left: particle.left,
               filter: "blur(40px)",
             }}
           />
@@ -95,6 +100,7 @@ export default function Hero() {
           Welcome to
           <span className="block text-yellow-300">Blue Ocean Resort</span>
         </h1>
+
         <p
           ref={subtitleRef}
           className="resort-hero__subtitle text-xl md:text-2xl text-white/90 mb-10"
@@ -102,6 +108,7 @@ export default function Hero() {
           Experience luxury, tranquility, and the beauty of the ocean at
           Cox&apos;s Bazar
         </p>
+
         <div
           ref={buttonRef}
           className="flex flex-col sm:flex-row gap-4 justify-center"
@@ -112,9 +119,10 @@ export default function Hero() {
           >
             Explore Rooms
           </Link>
+
           <Link
             href="/about"
-            className="btn-outline px-10 py-4 text-lg rounded-full inline-block text-center border border-yellow-500 text-black hover:bg-yellow-500 hover:text-yellow-600"
+            className="btn-primary px-10 py-4 text-lg rounded-full inline-block text-center"
           >
             Learn More
           </Link>

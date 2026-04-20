@@ -7,6 +7,7 @@ interface AuthContextType {
   user: any | null
   profile: any | null
   loading: boolean
+  isAdmin: boolean
   signUp: (email: string, password: string, username: string, phone?: string) => Promise<any>
   signIn: (email: string, password: string) => Promise<any>
   signOut: () => Promise<void>
@@ -18,6 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null)
   const [profile, setProfile] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     checkUser()
@@ -28,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         fetchProfile(session.user.id)
       } else {
         setProfile(null)
+        setIsAdmin(false)
       }
     })
 
@@ -55,14 +58,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('id', userId)
         .single()
+
       setProfile(data)
+      setIsAdmin(data?.role === 'admin')
     } catch (error) {
       console.error('Profile fetch error:', error)
     }
   }
 
   const signUp = async (email: string, password: string, username: string, phone?: string) => {
-    // 1. Check username
     const { data: existingUser } = await supabase
       .from('profiles')
       .select('username')
@@ -73,33 +77,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Username already taken!')
     }
 
-    // 2. Sign up - NO email verification
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          username: username,
-        },
+        data: { username },
       },
     })
 
     if (error) throw error
 
-    // 3. Create profile
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: data.user.id,
-          username: username,
-          email: email,
+          username,
+          email,
           phone: phone || null,
+          role: 'user',
         })
 
-      if (profileError) {
-        console.error('Profile create error:', profileError)
-      }
+      if (profileError) console.error('Profile error:', profileError)
     }
 
     return data
@@ -119,10 +118,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
+    setIsAdmin(false)
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )
