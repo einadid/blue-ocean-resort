@@ -2,10 +2,13 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
+import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterForm() {
+  const router = useRouter()
+  const { signUp } = useAuth()
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -14,87 +17,81 @@ export default function RegisterForm() {
     confirmPassword: '',
   })
   const [loading, setLoading] = useState(false)
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
-  const [checkingUsername, setCheckingUsername] = useState(false)
-  const { signUp } = useAuth()
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Real-time username check
   const checkUsername = async (username: string) => {
     if (username.length < 3) {
-      setUsernameAvailable(null)
+      setUsernameStatus('idle')
       return
     }
 
-    setCheckingUsername(true)
+    setUsernameStatus('checking')
+
     const { data } = await supabase
       .from('profiles')
       .select('username')
       .eq('username', username)
       .single()
 
-    setUsernameAvailable(!data)
-    setCheckingUsername(false)
+    setUsernameStatus(data ? 'taken' : 'available')
   }
 
-  const handleUsernameChange = (username: string) => {
-    setFormData({ ...formData, username })
-    
-    // Debounce username check
-    const timer = setTimeout(() => {
-      checkUsername(username)
-    }, 500)
-
-    return () => clearTimeout(timer)
+  // Debounce username check
+  let usernameTimer: NodeJS.Timeout
+  const handleUsernameChange = (value: string) => {
+    setFormData({ ...formData, username: value })
+    clearTimeout(usernameTimer)
+    usernameTimer = setTimeout(() => checkUsername(value), 500)
   }
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  }
+  // Validate form
+  const validate = () => {
+    const newErrors: Record<string, string> = {}
 
-  const validatePhone = (phone: string) => {
-    return /^01[0-9]{9}$/.test(phone) // Bangladesh phone format
+    if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters'
+    }
+
+    if (!formData.email.includes('@')) {
+      newErrors.email = 'Please enter a valid email'
+    }
+
+    if (formData.phone && !/^01[0-9]{9}$/.test(formData.phone)) {
+      newErrors.phone = 'Phone format: 01XXXXXXXXX'
+    }
+
+    if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match'
+    }
+
+    if (usernameStatus === 'taken') {
+      newErrors.username = 'Username already taken'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validations
-    if (formData.username.length < 3) {
-      toast.error('Username must be at least 3 characters')
-      return
-    }
-
-    if (!validateEmail(formData.email)) {
-      toast.error('Invalid email format')
-      return
-    }
-
-    if (formData.phone && !validatePhone(formData.phone)) {
-      toast.error('Invalid phone number (use 01XXXXXXXXX)')
-      return
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters')
-      return
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match')
-      return
-    }
-
-    if (!usernameAvailable) {
-      toast.error('Username is not available')
-      return
-    }
+    if (!validate()) return
 
     setLoading(true)
 
     try {
-      await signUp(formData.email, formData.password, formData.username)
-      toast.success('Registration successful! Please login.')
-      window.location.href = '/login'
+      await signUp(formData.email, formData.password, formData.username, formData.phone)
+      toast.success('Registration successful! 🎉')
+      
+      // Auto login after registration
+      router.push('/')
+      window.location.href = '/'
     } catch (error: any) {
       toast.error(error.message || 'Registration failed')
     } finally {
@@ -103,94 +100,139 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold text-center mb-6">Register</h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="max-w-md mx-auto mt-10 p-8 bg-white rounded-xl shadow-lg">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-ocean rounded-full flex items-center justify-center mx-auto mb-4">
+          <span className="text-white text-2xl font-bold">BO</span>
+        </div>
+        <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
+        <p className="text-gray-500 mt-2">Join Blue Ocean Resort</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Username */}
         <div>
-          <label className="block text-sm font-medium mb-2">Username *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Username *
+          </label>
           <input
             type="text"
             value={formData.username}
             onChange={(e) => handleUsernameChange(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-ocean"
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ocean outline-none ${
+              errors.username ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Choose a username"
             required
-            minLength={3}
           />
-          {checkingUsername && (
-            <p className="text-sm text-gray-500 mt-1">Checking...</p>
+          {/* Username Status */}
+          {usernameStatus === 'checking' && (
+            <p className="text-sm text-gray-500 mt-1">⏳ Checking...</p>
           )}
-          {usernameAvailable === true && (
-            <p className="text-sm text-green-600 mt-1">✓ Username available</p>
+          {usernameStatus === 'available' && (
+            <p className="text-sm text-green-600 mt-1">✅ Username available!</p>
           )}
-          {usernameAvailable === false && (
-            <p className="text-sm text-red-600 mt-1">✗ Username taken</p>
+          {usernameStatus === 'taken' && (
+            <p className="text-sm text-red-600 mt-1">❌ Username already taken</p>
+          )}
+          {errors.username && usernameStatus !== 'taken' && (
+            <p className="text-sm text-red-600 mt-1">{errors.username}</p>
           )}
         </div>
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium mb-2">Email *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email *
+          </label>
           <input
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-ocean"
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ocean outline-none ${
+              errors.email ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="your@email.com"
             required
           />
+          {errors.email && (
+            <p className="text-sm text-red-600 mt-1">{errors.email}</p>
+          )}
         </div>
 
         {/* Phone */}
         <div>
-          <label className="block text-sm font-medium mb-2">Phone (Optional)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Phone (Optional)
+          </label>
           <input
             type="tel"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ocean outline-none ${
+              errors.phone ? 'border-red-500' : 'border-gray-300'
+            }`}
             placeholder="01XXXXXXXXX"
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-ocean"
           />
+          {errors.phone && (
+            <p className="text-sm text-red-600 mt-1">{errors.phone}</p>
+          )}
         </div>
 
         {/* Password */}
         <div>
-          <label className="block text-sm font-medium mb-2">Password *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Password *
+          </label>
           <input
             type="password"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-ocean"
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ocean outline-none ${
+              errors.password ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Minimum 6 characters"
             required
-            minLength={6}
           />
+          {errors.password && (
+            <p className="text-sm text-red-600 mt-1">{errors.password}</p>
+          )}
         </div>
 
         {/* Confirm Password */}
         <div>
-          <label className="block text-sm font-medium mb-2">Confirm Password *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Confirm Password *
+          </label>
           <input
             type="password"
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-ocean"
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ocean outline-none ${
+              errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Re-enter password"
             required
-            minLength={6}
           />
+          {errors.confirmPassword && (
+            <p className="text-sm text-red-600 mt-1">{errors.confirmPassword}</p>
+          )}
         </div>
 
+        {/* Submit */}
         <button
           type="submit"
-          disabled={loading || !usernameAvailable}
-          className="w-full bg-ocean text-white py-2 rounded-lg hover:bg-ocean-dark disabled:opacity-50"
+          disabled={loading || usernameStatus === 'taken'}
+          className="w-full py-3 bg-ocean text-white font-semibold rounded-lg hover:bg-ocean-dark disabled:opacity-50 transition text-lg"
         >
-          {loading ? 'Registering...' : 'Register'}
+          {loading ? 'Creating Account...' : 'Register'}
         </button>
       </form>
 
-      <p className="text-center mt-4 text-sm">
+      <p className="text-center mt-6 text-gray-600">
         Already have an account?{' '}
-        <a href="/login" className="text-ocean hover:underline">
+        <a href="/login" className="text-ocean hover:underline font-semibold">
           Login here
         </a>
       </p>

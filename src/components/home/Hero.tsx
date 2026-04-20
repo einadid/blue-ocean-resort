@@ -1,15 +1,15 @@
-'use client'
+"use client";
 
-import { useEffect, useRef } from 'react'
-import { gsap } from 'gsap'
-import Link from 'next/link'
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+import Link from "next/link";
 
 export default function Hero() {
-  const heroRef = useRef<HTMLDivElement>(null)
-  const titleRef = useRef<HTMLHeadingElement>(null)
-  const subtitleRef = useRef<HTMLParagraphElement>(null)
-  const buttonRef = useRef<HTMLDivElement>(null)
-  const particlesRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const particlesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -18,8 +18,8 @@ export default function Hero() {
         y: -80,
         opacity: 0,
         duration: 1.2,
-        ease: 'power4.out',
-      })
+        ease: "power4.out",
+      });
 
       // Subtitle
       gsap.from(subtitleRef.current, {
@@ -27,8 +27,8 @@ export default function Hero() {
         opacity: 0,
         duration: 1,
         delay: 0.4,
-        ease: 'power3.out',
-      })
+        ease: "power3.out",
+      });
 
       // Buttons
       gsap.from(buttonRef.current, {
@@ -36,30 +36,30 @@ export default function Hero() {
         opacity: 0,
         duration: 0.8,
         delay: 0.8,
-        ease: 'back.out(1.7)',
-      })
+        ease: "back.out(1.7)",
+      });
 
       // Floating particles
       if (particlesRef.current) {
-        const particles = particlesRef.current.children
+        const particles = particlesRef.current.children;
         gsap.to(particles, {
-          y: 'random(-30, 30)',
-          x: 'random(-20, 20)',
-          rotation: 'random(-15, 15)',
-          duration: 'random(3, 6)',
+          y: "random(-30, 30)",
+          x: "random(-20, 20)",
+          rotation: "random(-15, 15)",
+          duration: "random(3, 6)",
           repeat: -1,
           yoyo: true,
-          ease: 'sine.inOut',
+          ease: "sine.inOut",
           stagger: {
             amount: 2,
-            from: 'random',
+            from: "random",
           },
-        })
+        });
       }
-    }, heroRef)
+    }, heroRef);
 
-    return () => ctx.revert()
-  }, [])
+    return () => ctx.revert();
+  }, []);
 
   return (
     <div
@@ -67,7 +67,10 @@ export default function Hero() {
       className="resort-hero relative h-[650px] flex items-center justify-center overflow-hidden"
     >
       {/* Animated Particles */}
-      <div ref={particlesRef} className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div
+        ref={particlesRef}
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+      >
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
@@ -77,7 +80,7 @@ export default function Hero() {
               height: `${Math.random() * 100 + 50}px`,
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              filter: 'blur(40px)',
+              filter: "blur(40px)",
             }}
           />
         ))}
@@ -96,9 +99,13 @@ export default function Hero() {
           ref={subtitleRef}
           className="resort-hero__subtitle text-xl md:text-2xl text-white/90 mb-10"
         >
-          Experience luxury, tranquility, and the beauty of the ocean at Cox&apos;s Bazar
+          Experience luxury, tranquility, and the beauty of the ocean at
+          Cox&apos;s Bazar
         </p>
-        <div ref={buttonRef} className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div
+          ref={buttonRef}
+          className="flex flex-col sm:flex-row gap-4 justify-center"
+        >
           <Link
             href="/rooms"
             className="btn-primary px-10 py-4 text-lg rounded-full inline-block text-center"
@@ -107,7 +114,7 @@ export default function Hero() {
           </Link>
           <Link
             href="/about"
-            className="btn-outline px-10 py-4 text-lg rounded-full inline-block text-center border-white text-white hover:bg-white hover:text-ocean-dark"
+            className="btn-outline px-10 py-4 text-lg rounded-full inline-block text-center border border-yellow-500 text-black hover:bg-yellow-500 hover:text-yellow-600"
           >
             Learn More
           </Link>
@@ -116,7 +123,11 @@ export default function Hero() {
 
       {/* Wave */}
       <div className="absolute bottom-0 left-0 w-full">
-        <svg className="w-full h-24" viewBox="0 0 1200 120" preserveAspectRatio="none">
+        <svg
+          className="w-full h-24"
+          viewBox="0 0 1200 120"
+          preserveAspectRatio="none"
+        >
           <path
             d="M0,50 C150,100 350,0 600,50 C850,100 1050,0 1200,50 L1200,120 L0,120 Z"
             fill="white"
@@ -135,5 +146,5 @@ export default function Hero() {
         </svg>
       </div>
     </div>
-  )
+  );
 }
